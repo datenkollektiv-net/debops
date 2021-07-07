@@ -40,6 +40,26 @@ Added
 
   .. __: https://wiki.debian.org/Multiarch/HOWTO
 
+<<<<<<< HEAD
+=======
+:ref:`debops.lvm` role
+''''''''''''''''''''''
+
+- The role can now manage `LVM Thin Pool Logical Volumes`__.
+
+  .. __: https://man7.org/linux/man-pages/man7/lvmthin.7.html
+
+- It is now possible to apply custom options to :ref:`lvm__thin_pools` and
+  :ref:`lvm__logical_volumes`.
+
+:ref:`debops.lxc` role
+''''''''''''''''''''''
+
+- The role can define a list of SSH identities added to the ``root`` UNIX
+  account in new LXC containers by default. This can be used to grant multiple
+  system administrators access to the containers.
+
+>>>>>>> 88e59122d... [lvm] Allow custom lvcreate options
 :ref:`debops.rsyslog` role
 ''''''''''''''''''''''''''
 
