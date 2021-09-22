@@ -308,7 +308,7 @@ lxc__default_configuration:
         value: 'generated'
         state: '{{ "absent"
                    if (lxc__version is version("3.0.0", "<") or
-                       lxc__version is version("3.1.0", ">="))
+                       lxc__version is version("4.1.0", ">="))
                    else "present" }}'
 
       # Required in AppArmor environment to allow systemd services to start
@@ -319,7 +319,7 @@ lxc__default_configuration:
         value: '1'
         state: '{{ "absent"
                    if (lxc__version is version("3.0.0", "<") or
-                       lxc__version is version("3.1.0", ">="))
+                       lxc__version is version("4.1.0", ">="))
                    else "present" }}'
 
     # Default configuration for privileged LXC containers
@@ -428,7 +428,7 @@ lxc__default_configuration:
         value: 'generated'
         state: '{{ "absent"
                    if (lxc__version is version("3.0.0", "<") or
-                       lxc__version is version("3.1.0", ">="))
+                       lxc__version is version("4.1.0", ">="))
                    else "present" }}'
 
       # Required in AppArmor environment to allow systemd services to start
@@ -439,7 +439,7 @@ lxc__default_configuration:
         value: '1'
         state: '{{ "absent"
                    if (lxc__version is version("3.0.0", "<") or
-                       lxc__version is version("3.1.0", ">="))
+                       lxc__version is version("4.1.0", ">="))
                    else "present" }}'
 
     # Default configuration for privileged LXC containers with multiple network
@@ -623,6 +623,17 @@ lxc__default_container_config: '/etc/lxc/unprivileged.conf'
 # This can be overriden for individual containers using the ``item.ssh``
 # parameter.
 lxc__default_container_ssh: True
+
+                                                                   # ]]]
+# .. envvar:: lxc__default_container_ssh_root_sshkeys [[[
+#
+# The list of SSH public keys stored in the
+# :file:`/etc/lxc/root_authorized_keys` file. If the file is not empty, its
+# contents will be added to the :file:`/root/.ssh/authorized_keys` file in all
+# new LXC containers. This list can be used to define SSH identities of system
+# administrators which should have access to all LXC containers created on the
+# host.
+lxc__default_container_ssh_root_sshkeys: []
 
                                                                    # ]]]
 # .. envvar:: lxc__default_container_template [[[

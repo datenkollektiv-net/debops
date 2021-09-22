@@ -24,6 +24,242 @@ You can read information about required changes between releases in the
 .. _debops stable-2.3: https://github.com/debops/debops/compare/v2.3.0...stable-2.3
 
 
+`debops v2.3.2`_ - 2021-09-01
+-----------------------------
+
+.. _debops v2.3.2: https://github.com/debops/debops/compare/v2.3.1...v2.3.2
+
+Added
+~~~~~
+
+:ref:`debops.icinga` role
+'''''''''''''''''''''''''
+
+- Upstream Icinga APT packages will now be considered for upgrades by the
+  :command:`unattended-upgrades` service.
+
+:ref:`debops.lvm` role
+''''''''''''''''''''''
+
+- The role can now manage `LVM Thin Pool Logical Volumes`__.
+
+  .. __: https://man7.org/linux/man-pages/man7/lvmthin.7.html
+
+- It is now possible to apply custom options to :ref:`lvm__thin_pools` and
+  :ref:`lvm__logical_volumes`.
+
+:ref:`debops.lxc` role
+''''''''''''''''''''''
+
+- The role can define a list of SSH identities added to the ``root`` UNIX
+  account in new LXC containers by default. This can be used to grant multiple
+  system administrators access to the containers.
+
+:ref:`debops.mariadb_server` role
+'''''''''''''''''''''''''''''''''
+
+- The role will reserve TCP ports used by Galera Cluster in the
+  :file:`/etc/services` database.
+
+:ref:`debops.nginx` role
+''''''''''''''''''''''''
+
+- The role can now install ``nginx-light`` flavor package if requested.
+
+- The role can be used in "config-only" mode where the :command:`nginx`
+  packages are not installed but are expected to be present and in
+  configuration compatible with DebOps.
+
+:ref:`debops.sysctl` role
+'''''''''''''''''''''''''
+
+- The role can now disable "TCP Slow Start" algorithm if requested, to improve
+  the network connection performance. See
+  :envvar:`sysctl__tcp_performance_enabled` variable for more details.
+
+Changed
+~~~~~~~
+
+Updates of upstream application versions
+''''''''''''''''''''''''''''''''''''''''
+
+- Debian 11 (Bullseye) has been released. The :ref:`debops.ipxe` role will now
+  prepare a netboot installer with this release and set Bullseye as the default
+  Stable installation option.
+
+General
+'''''''
+
+- DebOps tasks that import local SSH keys will now recognize FIDO U2F security
+  keys used via the SSH agent.
+
+:ref:`debops.apt` role
+''''''''''''''''''''''
+
+- The role defaults have been updated, Bullseye is the new Stable.
+
+:ref:`debops.ipxe` role
+'''''''''''''''''''''''
+
+- You can now define what kernel parameters are used by default in the Debian
+  Installer, using an iPXE variable.
+
+:ref:`debops.ldap` role
+'''''''''''''''''''''''
+
+- The role will include the ``host*`` network interfaces created by
+  :command:`systemd-nspawn` command in the list of network interface MAC
+  addresses saved in the host LDAP objects.
+
+:ref:`debops.redis_server` role
+'''''''''''''''''''''''''''''''
+
+- The Redis service will listen on ``127.0.0.1`` and ``::1`` IP addresses
+  instead of ``localhost`` by default to allow both IPv4 and IPv6
+  communication.
+
+:ref:`debops.sssd` role
+'''''''''''''''''''''''
+
+- The role will install the ``libsss-sudo`` APT package to inferface with the
+  :command:`sudo` command to support NSS queries via the :command:`sssd`
+  service.
+
+:ref:`debops.sudo` role
+'''''''''''''''''''''''
+
+- The :command:`sudo` command will not be configured to interface with LDAP
+  directory when the :command:`sssd` service is configured by DebOps. Instead,
+  ``libsss-sudo`` package will be used to interface :command:`sudo` command
+  with the :command:`sssd` service.
+
+Fixed
+~~~~~
+
+General
+'''''''
+
+- Version checks in a few role fact scripts which used :command:`dpkg-query` to
+  check the package version have been updated to output the strings correctly.
+
+:ref:`debops.apt_preferences` role
+''''''''''''''''''''''''''''''''''
+
+- The APT pin priority for the NeuroDebian repositories is lowered to allow
+  easier migration to repositories managed by the ``exrepo`` project.
+
+:ref:`debops.dhcpd` role
+''''''''''''''''''''''''
+
+- host-identifier parameters are now always quoted in dhcpd6.conf. This is
+  needed when the host-identifier contains periods (e.g. fully qualified
+  domain names).
+
+:ref:`debops.docker_server` role
+''''''''''''''''''''''''''''''''
+
+- The ``aufs-tools`` APT package has been removed in Debian Bullseye and will
+  not be installed on newer releases.
+
+:ref:`debops.libvirt` role
+''''''''''''''''''''''''''
+
+- The ``virt-top`` APT package is not part of the Debian Bullseye release,
+  therefore the role will not try to install it by default.
+
+:ref:`debops.libvirtd` role
+'''''''''''''''''''''''''''
+
+- The ``virt-top`` APT package is not part of the Debian Bullseye release,
+  therefore the role will not try to install it by default.
+
+:ref:`debops.lxc` role
+''''''''''''''''''''''
+
+- Use the Ubuntu GPG keyserver by default to download LXC container signing
+  keys when the container is created by the :command:`lxc-new-unprivileged`
+  script as well as through the ``lxc_container`` Ansible module (the SKS
+  keyserver pool has been deprecated).
+
+- Enable AppArmor nesting configuration in LXC v4.0.x version, used in Debian
+  Bullseye. Without this, various :command:`systemd` services inside of the
+  LXC containers cannot start and SSH/console login is delayed ~25 seconds.
+
+:ref:`debops.netbase` role
+''''''''''''''''''''''''''
+
+- Ignore commented out lines in :file:`/etc/hosts` database during fact
+  gathering.
+
+:ref:`debops.nginx` role
+''''''''''''''''''''''''
+
+- Do not remove the whole PKI hook directory when the :command:`nginx` hook
+  script is removed by the role.
+
+:ref:`debops.owncloud` role
+'''''''''''''''''''''''''''
+
+- Correctly handle the exit code of the :command:`occ ldap:show-config` command
+  when the LDAP configuration is not yet available.
+
+:ref:`debops.pki` role
+''''''''''''''''''''''
+
+- Ensure that the X.509 certificate requests generated by the
+  :command:`pki-realm` script to renew Let's Encrypt/ACME certificates include
+  SubjectAltNames defined in the PKI realm.
+
+:ref:`debops.postfix` role
+''''''''''''''''''''''''''
+
+- Do not remove the whole PKI hook directory when the :command:`postfix` hook
+  script is removed by the role.
+
+:ref:`debops.proc_hidepid` role
+'''''''''''''''''''''''''''''''
+
+- Add the ``procadmins`` UNIX group as a supplementary group in the
+  :file:`user@.service` :command:`systemd` unit to fix an issue where the user
+  service does not start when unified cgroupv2 hierarchy is used.
+
+:ref:`debops.prosody` role
+''''''''''''''''''''''''''
+
+- Do not remove the whole PKI hook directory when the :command:`prosody` hook
+  script is removed by the role.
+
+:ref:`debops.resolvconf` role
+'''''''''''''''''''''''''''''
+
+- Ensure that the fact script correctly includes information about upstream
+  nameservers when :command:`systemd-resolved` service is used.
+
+:ref:`debops.slapd` role
+''''''''''''''''''''''''
+
+- The role will install the ``libldap-common`` APT package to ensure that all
+  needed OpenLDAP dependencies are installed in minimal Debian environments.
+
+:ref:`debops.sshd` role
+'''''''''''''''''''''''
+
+- Fixed wrong variable name in file:`sshd_config.j2` template.
+
+:ref:`debops.sudo` role
+'''''''''''''''''''''''
+
+- Fixed an issue in the fact script which resulted in a wrong string being
+  picked up as the version number when :command:`sudo` was configured to use
+  LDAP, but the LDAP service was not available.
+
+:ref:`debops.system_users` role
+'''''''''''''''''''''''''''''''
+
+- The ``create_home`` parameter was not functional because of typos in the
+  Ansible task.
+
+
 `debops v2.3.1`_ - 2021-06-30
 -----------------------------
 
@@ -73,6 +309,17 @@ Added
 - The ``sshd__ferm_interface`` variable can now be used to limit access to SSH
   via the host firewall based on interface.
 
+:ref:`debops.sysctl` role
+'''''''''''''''''''''''''
+
+- The ``systemd`` Debian package in Debian Bullseye provides
+  a :command:`sysctl` configuration file which increases the maximum number of
+  PIDs allowed by the kernel. The role will create a "masked" configuration
+  file to ensure that :command:`sysctl` configuration works in LXC containers,
+  where the ``kernel.pid_max`` parameter will be commented out since it cannot
+  be modified from inside of a container. On hardware and VM hosts the
+  configuration will be applied as expected.
+
 Changed
 ~~~~~~~
 
@@ -103,6 +350,12 @@ Updates of upstream application versions
 - The default NetStream driver mode and authentication mode are now set based
   on whether the ``gtls`` driver is enabled.
 
+:ref:`debops.sysctl` role
+'''''''''''''''''''''''''
+
+- The role will configure protection for FIFOs and regular files along with
+  protection for symlinks and hardlinks, introduced in Debian Bullseye.
+
 :ref:`debops.system_users` role
 '''''''''''''''''''''''''''''''
 
@@ -121,7 +374,7 @@ Fixed
 :ref:`debops.kmod` role
 '''''''''''''''''''''''
 
-- Fixed an issue with role facts where the script ended with axception when the
+- Fixed an issue with role facts where the script ended with exception when the
   ``kmod`` package wasn't installed and the :command:`lsmod` command was not
   available.
 
