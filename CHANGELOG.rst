@@ -24,6 +24,180 @@ You can read information about required changes between releases in the
 .. _debops stable-3.0: https://github.com/debops/debops/compare/v3.0.0...stable-3.0
 
 
+`debops v3.0.2`_ - 2022-03-28
+-----------------------------
+
+.. _debops v3.0.2: https://github.com/debops/debops/compare/v3.0.1...v3.0.2
+
+Added
+~~~~~
+
+:ref:`debops.java` role
+'''''''''''''''''''''''
+
+- The role will now configure the default security policy for Java
+  applications. The additions will permit Java applications to access the
+  system-wide CA certificate store in :file:`/etc/ssl/certs/` directory as well
+  as the PKI infrastructure managed by the :ref:`debops.pki` role, so that Java
+  applications can use the existing X.509 certificates and private keys for TLS
+  encryption support.
+
+:ref:`debops.kibana` role
+'''''''''''''''''''''''''
+
+- The role can now manage passwords and other confidental data stored in the
+  Kibana keystore.
+
+Changed
+~~~~~~~
+
+Updates of upstream application versions
+''''''''''''''''''''''''''''''''''''''''
+
+- In the :ref:`debops.roundcube` role, the Roundcube version installed by
+  default has been updated to ``1.5.2``.
+
+- In the :ref:`debops.ipxe` role, the Debian Buster netboot installer version
+  has been updated to the next point release, 10.12. Debian Bullseye has been
+  updated to the next point relase as well, 11.3.
+
+General
+~~~~~~~
+
+- Various roles that lookup SSH public keys on the Ansible Controller
+  (:ref:`debops.preseed`, :ref:`debops.reprepro`, :ref:`debops.system_users`)
+  will try to use the :file:`~/.ssh/authorized_keys` file to find the keys if
+  all other methods fail.
+
+- Less important tasks in various roles that operate on files or directories
+  that might not exist initially on new hosts will be skipped in Ansible
+  ``--check`` mode to ensure that more important tasks might be evaluated.
+
+:ref:`debops.elasticsearch` role
+''''''''''''''''''''''''''''''''
+
+- The configuration included in the role has been updated to work correctly
+  with Elasticsearch v8.0.x release.
+
+- The role will check the status of the built-in user accounts via the HTTP API
+  instead of relying on the Ansible local facts and create them if they don't
+  exist. This should help with an upgrade of existing Elasticsearch clusters
+  without TLS encrypted traffic and authentication.
+
+:ref:`debops.kibana` role
+'''''''''''''''''''''''''
+
+- The configuration included in the role has been updated to work correctly
+  with Kibana v8.0.x release.
+
+:ref:`debops.pki` role
+''''''''''''''''''''''
+
+- The :command:`pki-realm` script will call the :command:`certbot` command with
+  the :command:`certbot --authenticator <plugin>` option explicitly to allow
+  use with third-party authenticator plugins that might not support the
+  :command:`certbot --<plugin>` syntax.
+
+Fixed
+~~~~~
+
+General
+'''''''
+
+- Ensure that the :file:`tools/dist-upgrade.yml` playbook works witout the
+  ``${SUDO_USER}`` environment variable set, for example if executed directly
+  using the ``root`` UNIX account.
+
+- Fixed an issue with custom Ansible plugins not working in "standalone" mode
+  without the DebOps scripts installed on Ansible Controller.
+
+:ref:`debops.atd` role
+''''''''''''''''''''''
+
+- Fixed an issue with the role facts not being correctly defined when the role
+  is executed with the ``meta::facts`` Ansible tag.
+
+debops.boxbackup role
+'''''''''''''''''''''
+
+- The role is not included in the DebOps Collection on Ansible Galaxy,
+  therefore its playbook is no longer included in the main :file:`site.yml`
+  playbook. This fixes an issue with Ansible stopping the site playbook
+  execution when it cannot find the ``boxbackup`` role in the Collection.
+
+:ref:`debops.elasticsearch` role
+''''''''''''''''''''''''''''''''
+
+- The internal Java security policy used by Elasticsearch will be configured
+  only on Elasticsearch v7.x+ versions. Before them, Elasticsearch used the
+  global Java security policy.
+
+:ref:`debops.gitlab_runner` role
+''''''''''''''''''''''''''''''''
+
+- Fixed an error that could occur in the "Patch 'vagrant-libvirt' source code"
+  task on systems other than Debian 9 or 10.
+
+:ref:`debops.grub` role
+'''''''''''''''''''''''
+
+- The :command:`grub` user passwords will be passed for encryption using
+  environment variables instead of directly on the command line, to avoid leaks
+  through the process list.
+
+:ref:`debops.kibana` role
+'''''''''''''''''''''''''
+
+- The role will use the correct path of the Kibana keystore depending on the
+  installed version (versions <7.0.0 keep the keystore in the
+  :file:`/var/lib/kibana/` directory; newer versions use the
+  :file:`/etc/kibana/` directory).
+
+- The role will use different user account depending on Kibana version (either
+  ``kibana``, or ``kibana_system`` used in newer installations of
+  Elasticsearch). Depending on your installed version, you should check the
+  :envvar:`kibana__elasticsearch_username` to verify that the correct account
+  is used for access to Elasticsearch.
+
+- The role will include the ``server.publicBaseUrl`` parameter depending on
+  Kibana version, to avoid failures on older Kibana installations.
+
+:ref:`debops.ldap` role
+'''''''''''''''''''''''
+
+- Fixed an issue with the role passing IP and MAC addresses to the LDAP
+  directory as a nested YAML list which resulted in a wrong attribute values.
+
+:ref:`debops.logrotate` role
+''''''''''''''''''''''''''''
+
+- Fixed formatting in the :file:`/etc/logrotate.conf` configuration file to
+  avoid adding :command:`vim` fold markers from the DebOps role defaults.
+
+:ref:`debops.ntp` role
+''''''''''''''''''''''
+
+- Fix an issue where the role tried to manage the :command:`systemd-timesyncd`
+  service without it actually being present on the host. This should now be
+  avoided by carefully checking the service status.
+
+Removed
+~~~~~~~
+
+:ref:`debops.apt_install` role
+''''''''''''''''''''''''''''''
+
+- The ``ranger`` APT package will not be installed by default. The ``mc``
+  package can be used as an alternative.
+
+:ref:`debops.root_account` role
+'''''''''''''''''''''''''''''''
+
+- The role will no longer modify the :file:`~/.profile` configuration file, the
+  issue there was solved a few Debian releases ago and the custom fix no longer
+  needed.
+
+
 `debops v3.0.1`_ - 2022-02-17
 -----------------------------
 
