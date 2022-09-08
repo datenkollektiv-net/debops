@@ -96,7 +96,8 @@
 
 # OpenPGP keys, application download and validation [[[1
 
-- become: True
+- name: Download and validate the tarballs
+  become: True
   become_user: '{{ hashicorp__user }}'
   when: (hashicorp__applications or hashicorp__dependent_applications)
   block:
@@ -109,6 +110,7 @@
                  hashicorp__combined_version_map[item.0] + "/" + item.0 + "_" +
                  hashicorp__combined_version_map[item.0] + "_" + item.1 }}'
         dest: '{{ hashicorp__src + "/" + item.0 + "/" + hashicorp__combined_version_map[item.0] + "/" }}'
+        mode: '0644'
       with_nested:
         - '{{ (hashicorp__applications + hashicorp__dependent_applications) | unique }}'
         - [ '{{ hashicorp__tar_suffix }}', '{{ hashicorp__hash_suffix }}', '{{ hashicorp__sig_suffix }}' ]
@@ -124,6 +126,7 @@
                  hashicorp__combined_version_map[item.0] + "/" + item.0 + "_" +
                  hashicorp__combined_version_map[item.0] + "_" + item.1 }}'
         dest: '{{ hashicorp__src + "/" + item.0 + "/" + hashicorp__combined_version_map[item.0] + "/" }}'
+        mode: '0644'
       with_nested:
         - [ 'consul' ]
         - [ '{{ hashicorp__consul_webui_suffix }}' ]

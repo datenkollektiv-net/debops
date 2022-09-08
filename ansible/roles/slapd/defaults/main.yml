@@ -333,6 +333,12 @@ slapd__uid_gid_max: '{{ slapd__uid_gid_min|int + 99999999 }}'
 # LDAP database tuning [[[
 # ------------------------
 
+# .. envvar:: slapd__saslauthd_enabled [[[
+#
+# Boolean, whether the saslauthd configuration should be managed.
+slapd__saslauthd_enabled: True
+
+                                                                   # ]]]
 # .. envvar:: slapd__data_max_size [[[
 #
 # Specify the maximum size of the main database, in bytes, default is 10 GB.
@@ -659,7 +665,7 @@ slapd__default_tasks:
   - name: 'Configure the OpenLDAP server log level'
     dn: 'cn=config'
     attributes:
-      olcLogLevel: 'stats'
+      olcLogLevel: 'none'
     state: 'exact'
 
   - name: 'Define the default password hashing method'
@@ -754,6 +760,7 @@ slapd__default_tasks:
     dn: [ 'olcDatabase={1}mdb', 'cn=config' ]
     attributes:
       olcDbIndex:
+        - 'dc eq'
         - 'cn,uid eq'
         - 'member,memberUid eq'
         - 'roleOccupant eq'

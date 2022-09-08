@@ -1,6 +1,7 @@
 .. Copyright (C) 2017-2019 Maciej Delmanowski <drybjed@gmail.com>
 .. Copyright (C) 2019      Tasos Alvas <tasos.alvas@qwertyuiopia.com>
 .. Copyright (C) 2017-2019 DebOps <https://debops.org/>
+.. Copyright (C) 2022      GRNET <https://grnet.gr>
 .. SPDX-License-Identifier: GPL-3.0-or-later
 
 .. _faq:
@@ -145,6 +146,91 @@ See `Issue #444`__ for more information and an example of such a pull
 request.
 
 .. __: https://github.com/debops/debops/issues/444
+
+
+I ran DebOps against a target host and now I can no longer ssh into the host.
+-----------------------------------------------------------------------------
+
+First, you obviously need to connect to the host in some other way; e.g. through
+the console.
+
+Second, undo what DebOps has done:
+
+* Edit :file:`/etc/ssh/sshd_config` and see if you can fix something. For
+  example, if you were logging in with a username and password, you need to set
+  ``PasswordAuthentication yes``.  Run ``service ssh reload`` if you make any
+  changes.
+
+* Edit :file:`/etc/pam.d/sshd` and comment out this line::
+
+      account  required     pam_access.so nodefgroup accessfile=/etc/security/access-sshd.conf
+
+* Check :file:`/var/log/auth.log` for more hints.
+
+Finally, read the :ref:`debops.sshd` role documentation. It explains how it
+works and how you can configure it so that it does what you want.
+
+DebOps is very slow.
+--------------------
+
+There are a few things you can do to speed it up.
+
+First, in :file:`.debops.cfg`, enable ssh pipelining:
+
+.. code-block:: ini
+
+   [ansible ssh_connection]
+   pipelining = True
+
+After that, execute the :command:`debops project refresh` command to apply the
+new options in the :file:`ansible.cfg` configuration file. See the `Ansible
+documentation on pipelining`_ for more information.
+
+Second, use as Ansible/DebOps Controller a machine that is "near" (on
+the same network as) the controlled machines. The reason for this is due to how
+Ansible performs its operations - each "task" is converted to a Python script
+which is then sent over SSH to the host and executed there, returning with the
+finished results back to the Ansible Controller host. This usually takes
+a 100-200ms or so, depending on network speed and available bandwidth. With
+small number of tasks this round-trip cost is negligible, but with large
+projects like DebOps with thousands of tasks split between multiple roles and
+playbooks it can quickly add up.
+
+These two adjustments alone can often halve the time needed for DebOps
+to run.
+
+Third, the ``site.yml`` playbook runs everything, but you don't always need
+to run everything. Very often you can run only a subset of the
+playbooks; so instead of ``debops run site``, you can run this:
+
+.. code-block:: console
+
+   debops run service/core srv app
+
+Read :ref:`playbooks` for more information.
+
+If your controlled machine is already configured, and you make
+a change that affects only something very specific (e.g. a configuration
+change that concerns only the :ref:`debops.owncloud` role), you can ask to run
+only the relevant playbook:
+
+.. code-block:: console
+
+   debops run service/owncloud
+
+The DebOps playbooks make extensive use of tags to enable you to further
+narrow this down. This will only run tasks that configure nginx in the
+context of ownCloud:
+
+.. code-block:: console
+
+   debops run service/owncloud --tags role::nginx
+
+The :ref:`documentation of the DebOps roles <ansible_roles>` contains,
+in the "Getting started" section of each role, an "Ansible tags" section
+describing more tags that you can use.
+
+.. _Ansible documentation on pipelining: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/ssh_connection.html#parameter-pipelining
 
 
 .. rubric:: Footnotes

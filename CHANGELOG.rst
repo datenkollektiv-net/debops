@@ -23,6 +23,460 @@ You can read information about required changes between releases in the
 
 .. _debops stable-3.0: https://github.com/debops/debops/compare/v3.0.0...stable-3.0
 
+Added
+~~~~~
+
+:ref:`debops.keyring` role
+''''''''''''''''''''''''''
+
+- The role can now download APT repository GPG keys to separate keyring files,
+  which can be used to scope a given GPG key to specific APT repositories.
+
+Changed
+~~~~~~~
+
+Updates of upstream application versions
+''''''''''''''''''''''''''''''''''''''''
+
+- In the :ref:`debops.owncloud` role, the ownCloud support has been updated to
+  ``v10.10``.
+
+:ref:`debops.docker_server` role
+''''''''''''''''''''''''''''''''
+
+- The role will now recognize the ``aarch64`` architecture used on latest Apple
+  computers and translate it to ``arm64`` to allow installation of Docker
+  Engine from upstream repositories.
+
+Fixed
+~~~~~
+
+:ref:`debops.minio` role
+''''''''''''''''''''''''
+
+- The role will use the default :file:`/etc/skel/` directory instead of
+  :file:`/dev/null` to create the ``minio`` UNIX account, due to a bug in
+  Ansible ``user`` module that forbids use of :file:`/dev/null` as home
+  skeleton.
+
+
+`debops v3.0.3`_ - 2022-09-02
+-----------------------------
+
+.. _debops v3.0.3: https://github.com/debops/debops/compare/v3.0.2...v3.0.3
+
+Added
+~~~~~
+
+General
+'''''''
+
+- DebOps now includes a custom version of the
+  ``community.general.apache2_module`` Ansible module, available as
+  ``debops.debops.apache2_module``. The custom module includes a fixed
+  idempotency check for enabled Apache 2 modules that works on Debian or Ubuntu
+  hosts. The :ref:`debops.apache` Ansible role will use this module instead of
+  the original one.
+
+- In the :file:`site.yml` playbook, the :file:`sys.yml` and :file:`net.yml`
+  playbooks will be executed before the :file:`common.yml` playbook. This
+  should ensure that configuration of certain resources like mount points or
+  LVM pools is present before the system is prepared for general operation.
+
+- DNS SRV resource records in various roles have been documented in central
+  :ref:`dns_configuration` documentation page for easier management.
+
+:ref:`debops.fhs` role
+''''''''''''''''''''''
+
+- The role can now create directories defined on the group or host inventory
+  level if desired.
+
+:ref:`debops.icinga_web` role
+'''''''''''''''''''''''''''''
+
+- The role can now create host and service templates using Icinga Director API.
+  This should improve the initial deployment experience, since users don't need
+  to create basic host templates by hand before registering hosts in Icinga.
+
+:ref:`debops.netbox` role
+'''''''''''''''''''''''''
+
+- The role will enable LDAP support in NetBox if LDAP environment managed by
+  the :ref:`debops.ldap` role is detected on the host. Currently only user
+  authentication and Django ACL system is supported via LDAP groups.
+
+:ref:`debops.postfix` role
+''''''''''''''''''''''''''
+
+- The role can now install APT packages specified on the group and host level
+  of Ansible inventory, for more flexibility.
+
+:ref:`debops.resources` role
+''''''''''''''''''''''''''''
+
+- The :ref:`debops.resources` role can now be used to repace a line via the
+  ``ansible.builtin.replace`` module.
+
+:ref:`debops.slapd` role
+''''''''''''''''''''''''
+
+- The playbook can now be configured to skip the saslauthd role execution.
+
+Changed
+~~~~~~~
+
+Updates of upstream application versions
+''''''''''''''''''''''''''''''''''''''''
+
+- In the :ref:`debops.ipxe` role, the Debian Bullseye has been updated to the
+  next point release, 11.4.
+
+General
+'''''''
+
+- The new Jinja2 3.x release changed the behaviour of the ``to_json`` Jinja
+  filter - it doesn't accept YAML lists as input anymore, only YAML
+  dictionaries. To fix this issue, the filters were switched to ``to_yaml`` in
+  various Ansible roles.
+
+- The debops-contrib :file:`dropbear_initramfs` playbook has been moved to
+  the :ref:`debops.dropbear_initramfs` playbook. The role variable
+  ``dropbear_initramfs__host_authorized_keys`` now uses the same keys as
+  the ``ansible.posix.authorized_key`` module.
+
+- Various tasks that interact with the MariaDB/MySQL databases will now use the
+  :file:`/run/mysqld/mysqld.sock` UNIX socket to do so, due to changes in
+  MariaDB restricting local connections for the ``root`` UNIX account.
+
+:ref:`debops.apt_install` role
+''''''''''''''''''''''''''''''
+
+- The kernel firmware Debian pakcages won't be installed on hosts which might
+  be Proxmox hypervisors, to avoid issues with custom kernel dependencies.
+
+``debops.boxbackup`` role
+'''''''''''''''''''''''''
+
+- Role dependencies have been moved from the :file:`meta/main.yml` file to the
+  role playbook to avoid issues with :command:`ansible-lint` checks.
+
+:ref:`debops.dhparam` role
+''''''''''''''''''''''''''
+
+- The :envvar:`dhparam__openssl_options` variable will be used in the script
+  maintaining the Diffie-Hellman parameters on the remote hosts, for
+  consistency.
+
+:ref:`debops.dokuwiki` role
+'''''''''''''''''''''''''''
+
+- The shell of the DokuWiki UNIX account is now configurable, set as
+  :file:`/bin/false` by default.
+
+:ref:`debops.dovecot` role
+''''''''''''''''''''''''''
+
+- Unused ``dovecot__ldap_server_port`` variable has been removed from role
+  defaults.
+
+:ref:`debops.etckeeper` role
+''''''''''''''''''''''''''''
+
+- The role will ignore GitLab Runner configuration as well as Docker keys and
+  GitLab Omnibus secrets to avoid storing sensitive data in :command:`git`
+  repository.
+
+:ref:`debops.ferm` role
+'''''''''''''''''''''''
+
+- All options in the :file:`/etc/default/ferm` configuration file are now
+  exposed as role default variables.
+
+:ref:`debops.influxdata` role
+'''''''''''''''''''''''''''''
+
+- The URL of the APT upstream repository has been updated.
+
+:ref:`debops.libvirtd` role
+'''''''''''''''''''''''''''
+
+- The ``qemu-kvm`` package is not needed on newer Debian/Ubuntu releases,
+  therefore it won't be installed by default.
+
+:ref:`debops.icinga` role
+'''''''''''''''''''''''''
+
+- New hosts will be added to Icinga Director using the ``icinga-agent-host``
+  template, created by default by the :ref:`debops.icinga_web` role. On
+  existing installations, you should either create this template by hand, or
+  run the :ref:`debops.icinga_web` role so that it gets added automatically.
+
+:ref:`debops.icinga_web` role
+'''''''''''''''''''''''''''''
+
+- The LDAP configuration used by the role to configure LDAP access will be
+  based on the :ref:`debops.ldap` Ansible local facts instead of static values,
+  to better support modified environments.
+
+:ref:`debops.minio` role
+''''''''''''''''''''''''
+
+- The role has been updated to support newer MinIO features, like the embedded
+  MinIO Console. Some of the instance parameters have been changed, for example
+  access key and secret key have been replaced with root account and password.
+  Check the role documentation for more details.
+
+:ref:`debops.nginx` role
+''''''''''''''''''''''''
+
+- Configure the :file:`nginx.service` systemd unit to start the
+  :command:`nginx` service after the network is configured. This way
+  :command:`nginx` should be able to resolve upstream services specified via
+  DNS names at startup.
+
+:ref:`debops.pdns` role
+'''''''''''''''''''''''
+
+- The SUID/SGID configuration is not needed anymore on PowerDNS >= v4.3.0; UNIX
+  account and group is now managed by a :command:`systemd` service unit.
+
+:ref:`debops.php` role
+''''''''''''''''''''''
+
+- The ``libsodium23`` APT package will be installed from Sury APT repository
+  when it's enabled in the role.
+
+:ref:`debops.pki` role
+''''''''''''''''''''''
+
+- After the :command:`certbot` script performs a certificate renewal operation,
+  a deploy hook will update the PEM chains in a given PKI realm
+  :file:`private/` directory to include the new private key created by the
+  :command:`certbot` script.
+
+:ref:`debops.postgresql` role
+'''''''''''''''''''''''''''''
+
+- The tasks that execute PostgreSQL commands will use the
+  ``community.postgresql.*`` Ansible modules explicitly via the FQCNs to
+  benefit from bugfixes in these modules.
+
+:ref:`debops.postldap` role
+'''''''''''''''''''''''''''
+
+- Unused ``postldap__ldap_server_port`` variable has been removed from role
+  defaults.
+
+:ref:`debops.prosody` role
+''''''''''''''''''''''''''
+
+- The ``compression`` Prosody module will not be updated by default due to
+  security concerns.
+
+:ref:`debops.python` role
+'''''''''''''''''''''''''
+
+- The role will enable Python 2.7 support via the fact script only when an
+  existing Python 2.7 installation is detected. This change should help avoid
+  installing Python 2.7 packages on newer OS releases when they might be
+  unavailable.
+
+:ref:`debops.slapd` role
+''''''''''''''''''''''''
+
+- The default log level used by OpenLDAP has been changed from ``stats`` to
+  ``none`` to minimize log output in large environments. This can be modified
+  using Ansible inventory in case that the authentication, accounting or search
+  metrics are needed.
+
+- The role will configure the ``dc`` equality index in the LDAP database to aid
+  lookups of certain services like Postfix.
+
+Fixed
+~~~~~
+
+General
+'''''''
+
+- The "shebang" scripts pointing to ``#!/usr/bin/python`` in various Ansible
+  modules were removed to ensure that the remot host will execute them with the
+  correct Python 3.x version.
+
+:ref:`debops.apt` role
+''''''''''''''''''''''
+
+- In the fact script, parse the ``deb-src`` configuration entries before
+  ``deb`` entries to ensure that there are no duplicates.
+
+- The role no longer defaults to the ``ansible_local.core.distribution`` and
+  ``ansible_local.core.distribution_release`` local facts for determining the
+  Linux distribution and the distribution release, respectively. These facts
+  were set later in the common playbook, meaning that the role would restore
+  the previous distribution release in ``/etc/apt/sources.list`` after a
+  distribution upgrade.
+
+:ref:`debops.core` role
+'''''''''''''''''''''''
+
+- Ensure that the ``ansible_controllers`` fact can be reset using the
+  :envvar:`core__remove_facts` variable to avoid infinitely growing list of
+  Ansible Controllers.
+
+:ref:`debops.cron` role
+'''''''''''''''''''''''
+
+- Fixed the order of job parameters applied by the role - now parameters from
+  a specific job will override parameters specified for all jobs in a given
+  configuration entry.
+
+:ref:`debops.dovecot` role
+''''''''''''''''''''''''''
+
+- Fixed the logic of the LDAP STARTTLS configuration parameter - the role
+  should now correctly configure STARTTLS as disabled if it's not enabled in
+  the LDAP environment.
+
+- The role's PKI hook script still referenced an old configuration file that
+  was no longer being managed by :ref:`debops.dovecot` since the role redesign,
+  resulting in the hook script failing to reload dovecot after a certificate or
+  DH param change.
+
+:ref:`debops.environment` role
+''''''''''''''''''''''''''''''
+
+- Fixed issues with preserving environment variables across multiple role
+  executions.
+
+:ref:`debops.ferm` role
+'''''''''''''''''''''''
+
+- Don't include additional '{' or '}' characters in certain rules when the
+  ``domain_args`` parameter is specified.
+
+:ref:`debops.grub` role
+'''''''''''''''''''''''
+
+- The :command:`grub` user passwords will be passed for encryption using
+  a temporary file stored in the :file:`secret/` directory on the Ansible
+  Controller instead of directly on the command line, to avoid leaks through
+  the process list.
+
+:ref:`debops.ldap` role
+'''''''''''''''''''''''
+
+- Fixed an issue with role parsing the already parsed Ansible facts to extract
+  IP/CIDR information which resulted in wrong output in certain cases. The role
+  will now implicitly trust the Ansible facts to be correct when adding IP and
+  prefix details to the LDAP database.
+
+:ref:`debops.netbase` role
+''''''''''''''''''''''''''
+
+- In the fact script, don't use ``in`` for matching IP addresses and DNS names
+  where substring matching is undesirable.
+
+:ref:`debops.netbox` role
+'''''''''''''''''''''''''
+
+- The LDAP configuration file will generated only when LDAP environment is
+  enabled.
+
+:ref:`debops.nullmailer` role
+'''''''''''''''''''''''''''''
+
+- The :envvar:`nullmailer__smtp_srv_rr` variable will be defined only when the
+  role is enabled. This avoids an issue where the needed DNS SRV records are
+  not defined which might cause Ansible execution to fail even when the
+  :command:`nullmailer` configuration is disabled.
+
+:ref:`debops.owncloud` role
+'''''''''''''''''''''''''''
+
+- The role is now compatible with Nextcloud 23 :command:`occ check` command,
+  which writes messages to stderr during initial installation.
+
+:ref:`debops.pdns` role
+'''''''''''''''''''''''
+
+- On pdns installations with version >= 4.5.0 (e.g. on Bookworm systems), the
+  role would cause a syntax error on the local-address configuration option.
+
+:ref:`debops.pki` role
+''''''''''''''''''''''
+
+- Fixed an issue where when a PKI realm was initialized for ACME/Let's Encrypt
+  support, second level domains were not included in the generated X.509
+  certificate request.
+
+:ref:`debops.postldap` role
+'''''''''''''''''''''''''''
+
+- Fixed the logic of the LDAP STARTTLS configuration parameter - the role
+  should now correctly configure STARTTLS as disabled if it's not enabled in
+  the LDAP environment.
+
+:ref:`debops.prosody` role
+''''''''''''''''''''''''''
+
+- The ``prosdoy__pki_realm_path`` variable has been renamed to
+  :envvar:`prosody__pki_realm_path` to fix the typo in the variable name. You
+  might need to update your inventory in this case so that the role gets
+  correct value.
+
+:ref:`debops.python` role
+'''''''''''''''''''''''''
+
+- In the fact script, correctly parse the subprocess output to find out the
+  version of installed Python executables.
+
+:ref:`debops.radvd` role
+''''''''''''''''''''''''
+
+- Append the DNSSL parameters to the correct list variable in the generated
+  configuration file.
+
+:ref:`debops.resolvconf` role
+'''''''''''''''''''''''''''''
+
+- Fixed an issue where the custom hook script did not add static
+  :command:`resolvconf` configuration after host was rebooted, when the
+  :file:`/run/resolvconf/` path did not exist. It will be created automatically
+  if not found.
+
+:ref:`debops.roundcube` role
+''''''''''''''''''''''''''''
+
+- Locked johndoh/contextmenu plugin to version 3.2.1 for Roundcube < 1.5 due to
+  compatibility issues.
+
+:ref:`debops.sudo` role
+'''''''''''''''''''''''
+
+- The fact script will check :command:`sudo` version using the :command:`dpkg`
+  command to avoid running :command:`sudo` on each Ansible fact gathering. This
+  proved problematic when LDAP support is enabled and the LDAP directory is not
+  available for any reason - :command:`sudo` tries to connect to the directory
+  and times out, slowing Ansible run into a crawl.
+
+Removed
+~~~~~~~
+
+- Federated Learning of Cohorts opt-out in the :ref:`debops.apache` and
+  :ref:`debops.nginx` roles has been removed. Google `abandoned the feature`__
+  in favor of Topics API in web browsers.
+
+  .. __: https://blog.google/products/chrome/get-know-new-topics-api-privacy-sandbox/
+
+:ref:`debops.postconf` role
+'''''''''''''''''''''''''''
+
+- The EHLO IP address check was removed. This check would reject a message if
+  the EHLO hostname of the connecting mailserver resolved to a non-publicly
+  routable IP address. However, rejecting messages for this reason is
+  prohibited by :rfc:`5321` section 4.1.4, and sometimes caused deliverability
+  issues for Office 365 users.
+
 
 `debops v3.0.2`_ - 2022-03-28
 -----------------------------
@@ -59,7 +513,7 @@ Updates of upstream application versions
 
 - In the :ref:`debops.ipxe` role, the Debian Buster netboot installer version
   has been updated to the next point release, 10.12. Debian Bullseye has been
-  updated to the next point relase as well, 11.3.
+  updated to the next point release as well, 11.3.
 
 General
 ~~~~~~~
@@ -188,7 +642,8 @@ Removed
 ''''''''''''''''''''''''''''''
 
 - The ``ranger`` APT package will not be installed by default. The ``mc``
-  package can be used as an alternative.
+  package can be used as an alternative. Or you can consider installing
+  ``nnn``.
 
 :ref:`debops.root_account` role
 '''''''''''''''''''''''''''''''

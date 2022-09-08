@@ -166,6 +166,7 @@
     name: '{{ icinga_web__database_name }}'
     state: 'import'
     target: '{{ item }}'
+    login_unix_socket: '/run/mysqld/mysqld.sock'
   with_items:
     - '{{ icinga_web__database_schema }}'
     - '/tmp/icingaweb-initial-data.sql'
@@ -183,6 +184,7 @@
     login_port: '{{ icinga_web__x509_database_port }}'
     login_user: '{{ icinga_web__x509_database_user }}'
     login_password: '{{ icinga_web__x509_database_password }}'
+    login_unix_socket: '/run/mysqld/mysqld.sock'
   when: icinga_web__x509_enabled|bool and
         icinga_web__x509_database_init|bool
   no_log: '{{ debops__no_log | d(True) }}'
@@ -285,3 +287,24 @@
 
 - name: Update Ansible facts if they were modified
   meta: 'flush_handlers'
+
+- name: Register Icinga templates in Icinga Director
+  ansible.builtin.uri:
+    body_format: 'json'
+    headers:
+      Accept: 'application/json'
+    method: 'POST'
+    body: '{{ item.data }}'
+    url: '{{ icinga_web__director_api_url + item.api_endpoint }}'
+    user: '{{ icinga_web__director_api_user }}'
+    password: '{{ icinga_web__director_api_password }}'
+    status_code: [ '201', '422', '500' ]
+    force_basic_auth: True
+  loop: '{{ icinga_web__director_combined_templates | debops.debops.parse_kv_items }}'
+  loop_control:
+    label: '{{ {"name": item.name, "state": item.state | d("present")} }}'
+  register: icinga_web__register_director_templates
+  when: icinga_web__director_enabled | bool and
+        item.state | d('present') not in [ 'absent', 'init', 'ignore' ]
+  changed_when: icinga_web__register_director_templates.status == 201
+  tags: [ 'role::icinga_web:templates' ]

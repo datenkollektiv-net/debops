@@ -349,6 +349,12 @@ HTTPS and TLS
   intermediate+root CA certificate is required for this.
   FIXME: Rename to ocsp_stapling_verify
 
+``nginx_ocsp_resolvers``
+  Optional, string.  List of DNS servers used to for resolving. Among other things
+  used to resolve OCSP stapling but in general all dns queries (e.g. for proxy_path).
+  If it's empty, nginx role will try to use the nameservers from /etc/resolv.conf.
+  Currently only the first nameserver is used
+
 ``hsts_enabled``
   Optional, boolean. Defaults to ``True``. If this is set to ``True`` and HTTPS
   is enabled for this item, the `HTTP Strict Transport Security`_ header is set
@@ -588,14 +594,6 @@ HTTP security headers
 ``frame_options``
   Optional, string. Value of the ``X-Frame-Options`` HTTP header field. Set to ``{{ omit }}``
   to not send the header field. Defaults to ``SAMEORIGIN``.
-
-``floc_optout``
-  Optional, boolean. If not specified or ``True``, the server will send the
-  ``Permissions-Policy`` HTTP header which will tell the browser to opt-out
-  from the `Federated Learning of Cohorts`__ feature. If ``False``, the header
-  will not be configured for a given website.
-
-  .. __: https://github.com/WICG/floc
 
 Search engine optimization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

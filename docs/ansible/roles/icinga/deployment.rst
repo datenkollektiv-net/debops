@@ -55,55 +55,52 @@ be implemented later if there's demand for it.
 DNS SRV records
 ---------------
 
-The ``debops.icinga`` role uses DNS ``SRV`` records to find the addresses of
-the master Icinga 2 nodes, as well as the Icinga 2 Director API. The nodes
-check the DNS records to determine if they should be configured as the "master"
-hosts, or client hosts that register themselves.
+The role detects the master and director servers by using
+:ref:`dns_configuration_srv` for the following services:
 
-The DNS SRV record service names are:
+.. code-block:: none
 
-- ``_icinga-master._tcp`` (for the master node(s))
-- ``_icinga-director._tcp`` (for the director node(s))
+   _icinga-master._tcp.{{ icinga__domain }} (default port 5665)
+   _icinga-director._tcp.{{ icinga__domain }} (default port 443)
 
 There can be multiple master and director DNS SRV records. The role will
 configure multiple master nodes in the :file:`zones.conf` configuration file,
 however only one director node will be used.
 
-You should create the DNS ``SRV`` records for the master and Director hosts,
-otherwise all of the Icinga 2 nodes will see themselves as "master" nodes and
-won't try to connect to each other. To do that in :command:`dnsmasq`, you can
-add the configuration options:
+.. warning:: The role uses the DNS SRV resource records to determine if a given
+             host should be configured as the "master" host, or a client host
+             that should register itself with the "master". Therefore, you should
+             create the DNS SRV records *beforehand*, as all the Icinga 2 nodes
+             will see themselves as "master" nodes otherwise, and won't connect
+             to the "master" node.
 
-.. code-block:: ini
+For details on how to configure DNS SRV records, see
+:ref:`dns_configuration_srv`.
 
-   srv-host = _icinga-master._tcp.example.org,icinga-master.example.org,5665
-   srv-host = _icinga-director._tcp.example.org,icinga.example.org,443
+Manual override
+~~~~~~~~~~~~~~~
 
-Similar records in the ISC BIND zone file:
-
-.. code-block:: none
-
-   _icinga-master._tcp.example.org.   86400 IN SRV 0 5 5665 icinga-master.example.org.
-   _icinga-director._tcp.example.org. 86400 IN SRV 0 5 443  icinga.example.org.
-
-The above configuration sets the ``icinga-master.example.org`` host as the
-"master" host. The Director API is available on a separate FQDN,
-``icinga.example.org``.
-
-You can also define the master and director nodes explicitly in the inventory
-variables, using the Ansible ``dig`` lookup syntax. To set the above
-configuration, define in the inventory:
+If SRV records are not feasible or you don't want to publish them everywhere,
+you can specify the required information using Ansible inventory. For example,
+to define the master and director nodes for all hosts in the Ansible inventory,
+you can add the variables below in the
+:file:`ansible/inventory/group_vars/all/icinga.yml` configuration file:
 
 .. code-block:: yaml
 
+   ---
+   # Icinga Masters
    icinga__master_nodes:
-     - target: 'icinga-master.example.org'
+     - target: 'icinga.example.org'
        port: '5665'
 
+   # Icinga Directors
    icinga__director_nodes:
      - target: 'icinga.example.org'
        port: '443'
 
+With this information, the role can correctly resolve the needed host and port
+details to use in other variables.
 
 Initial deployment
 ------------------
@@ -142,25 +139,21 @@ in the
 :file:`secret/icinga_web/auth/<inventory_hostname>/credentials/root/password`
 file (see :ref:`debops.secret` for more details).
 
-After logging in, you should create a new basic host template. By default, the
-role will try and register the nodes using the ``generic-host`` template. To
-create it, go to the "Icinga Director" -> "Hosts" -> "Host Templates" section
-and click on "Add". Enter "generic-host" as the "Hostname", set the "Check
-command" option as "hostalive". You should also set a reasonable "Check
-interval", "Retry interval' and "Max check attempts" fields, for example with
-5 minutes, 30 seconds and 5 tries.
+After logging in, and if you haven't already done so, try applying the
+:ref:`debops.icinga` role to some other host which is to be monitored. If
+everything is configured correctly, the role should automatically register the
+new host in Icinga via the Director REST API.  Subsequent execution of the role
+will not change the status of the host in Icinga, but if you remove the host
+from the web interface and re-run the :ref:`debops.icinga` role, the host will
+be registered again.
 
-It might be best to add a separate host template for hosts with Icinga 2 Agent
-installed, in case that you want to include other hosts as well. For this,
-create a new template with a chosen name, and in the "Icinga Agent and zone
-settings" section set the "Icinga 2 Agent", "Estabilish connection" and
-"Accepts config" options to "Yes". You can define the list of templates
-automatically applied during registration using the
-``icinga__director_register_*_templates`` default variables.
+By default, the role will automatically create two host templates,
+``generic-host`` and ``icinga-agent-host`` (the latter depending on the former)
+as part of the host registration process and will register new hosts using the
+``icinga-agent-host`` template.  See
+:ref:`icinga_web__ref_director_templates` for more details. Note that
+if you delete these templates they will, by default, be recreated every time a
+host is (re-)registered with the Director.
 
-After this you can apply the :ref:`debops.icinga` role to other hosts. If
-everything was configured correctly, the role should automatically register
-a new host in Icinga via the Director REST API. Subsequent execution of the
-role will not change the status of the host in Icinga, but if you remove the
-host from the web interface and re-run the :ref:`debops.icinga` role, the host
-will be registered again.
+You can define the list of templates automatically applied during registration
+using the ``icinga__director_register_*_templates`` default variables.
