@@ -23,6 +23,37 @@ You can read information about required changes between releases in the
 
 .. _debops stable-3.0: https://github.com/debops/debops/compare/v3.0.0...stable-3.0
 
+Changed
+~~~~~~~
+
+General
+'''''''
+
+- The Debian 12 (Bookworm) has been released! Multiple DebOps roles have been
+  updated and switched the "stable" release to Bookworm, with Bullseye becoming
+  the "oldstable" release. The new Debian Testing release, "Trixie" has also
+  been added in relevant places.
+
+:ref:`debops.ipxe` role
+'''''''''''''''''''''''
+
+- The Debian Installer Menu can now install Debian GNU/Linux 12 (Bookworm).
+
+Fixed
+~~~~~
+
+:ref:`debops.auth` role
+'''''''''''''''''''''''
+
+- The ``libpam-cracklib`` APT package will be installed and configured
+  conditionally. It has been removed in Debian Bookworm.
+
+
+`debops v3.0.5`_ - 2023-05-25
+-----------------------------
+
+.. _debops v3.0.5: https://github.com/debops/debops/compare/v3.0.4...v3.0.5
+
 Added
 ~~~~~
 
@@ -100,6 +131,9 @@ General
   The modern project layout supports multiple Ansible inventories encapsulated
   into :ref:`infrastructure views <project_infrastructure_views>`.
 
+- Various roles which use the ``shell`` Ansible module will now use
+  :command:`bash` shell as the executable explicitly.
+
 :ref:`debops.apt` role
 ''''''''''''''''''''''
 
@@ -151,17 +185,34 @@ General
 
   .. __: https://peps.python.org/pep-0440/
 
+:ref:`debops.dnsmasq` role
+''''''''''''''''''''''''''
+
+- Fixed service configuration mistake when DHCPv6 mode is set to an empty
+  string. The configuration template should take this into account and add
+  a correct separator (or omit it) in the generated configuration file.
+
 :ref:`debops.dovecot` role
 ''''''''''''''''''''''''''
 
 - Fixed a missed ``template_src`` lookup which didn't use a FQCN as a plugin
   name.
 
+- Fixed an issue where an empty :envvar:`dovecot__ssl_dh_file` variable
+  resulted in Dovecot service refusing to start due to incorrect configuration
+  value.
+
 :ref:`debops.etc_aliases` role
 ''''''''''''''''''''''''''''''
 
 - Don't save dependent recipients on Ansible Controller if they are not
   defined. This should avoid creating unnecessary files in AWX job containers.
+
+:ref:`debops.libvirtd` role
+'''''''''''''''''''''''''''
+
+- Fixed ``qemu-kvm`` package installation logic; the KVM packages should now be
+  handled correctly on Debian Bullseye and newer releases.
 
 :ref:`debops.ntp` role
 ''''''''''''''''''''''
