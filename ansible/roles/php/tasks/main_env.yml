@@ -37,6 +37,23 @@
   changed_when: False
   tags: [ 'role::php:pools', 'role::php:config' ]
 
+- name: Get all installed PHP versions
+  environment:
+    LC_ALL: 'C'
+  ansible.builtin.shell: set -o nounset -o pipefail -o errexit &&
+         apt-cache madison {{ php__version_preference | join(' ') }} \
+           | awk '{print $3}' \
+           | sed -e 's/^.*://' -e 's/\+.*$//' -e 's/\d+\.\d+//' \
+           | awk -F'.' '{print $1"."$2}' \
+           | sort -n |uniq
+  args:
+    executable: '/bin/bash'
+  register: php__register_all_installed_versions
+  check_mode: False
+  changed_when: False
+  tags: [ 'role::php:pools', 'role::php:config' ]
+  when: php__multiversion|d(False)
+
 - name: Detect PHP long version from available packages
   environment:
     LC_ALL: 'C'

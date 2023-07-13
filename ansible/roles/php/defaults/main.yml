@@ -238,6 +238,7 @@ php__common_included_packages:
   - 'zlib'
                                                                    # ]]]
                                                                    # ]]]
+
 # PHP Composer support [[[
 # ------------------------
 

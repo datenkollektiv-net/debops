@@ -1,0 +1,40 @@
+---
+# .. vim: foldmarker=[[[,]]]:foldmethod=marker
+
+# Copyright (C) 2023 Jan Kowalsky <jankow@datenkollektiv.net>
+# Copyright (C) 2016-2019 Maciej Delmanowski <drybjed@gmail.com>
+# Copyright (C) 2016-2019 DebOps <https://debops.org/>
+# SPDX-License-Identifier: GPL-3.0-only
+
+- name: Generate php-fpm pool configuration for each version
+  ansible.builtin.template:
+    src: 'etc/php/fpm/pool.d/pool.conf.j2'
+    dest: '/etc/php/{{ php__version }}/fpm/pool.d/{{ item.name }}.conf'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+  loop: '{{ q("flattened", php__default_pools
+                           + php__pools
+                           + php__group_pools
+                           + php__host_pools
+                           + php__dependent_pools) }}'
+  loop_control:
+    label: "Add pool {{ item.name }} for {{ php__version }}"
+  when: '"fpm" in php__server_api_packages and item.state | d("present") != "absent" and php__multiversion|d(False)'
+  notify: [ 'Restart php-fpm multiversion' ]
+  tags: [ 'role::php:pools', 'role::php:config' ]
+
+- name: Remove php-fpm pool configuration if requested for each version
+  ansible.builtin.file:
+    dest: '/etc/php/{{ php__version }}/fpm/pool.d/{{ item.name }}.conf'
+    state: 'absent'
+  loop: '{{ q("flattened", php__default_pools
+                           + php__pools
+                           + php__group_pools
+                           + php__host_pools
+                           + php__dependent_pools) }}'
+  loop_control:
+    label: "Remove pool {{ item.name }} for {{ php__version }}"
+  when: '"fpm" in php__server_api_packages and item.state | d() and item.state == "absent" and php__multiversion|d(False)'
+  notify: [ 'Restart php-fpm multiversion' ]
+  tags: [ 'role::php:pools', 'role::php:config' ]

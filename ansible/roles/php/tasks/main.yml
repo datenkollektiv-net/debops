@@ -41,7 +41,7 @@
   ansible.builtin.include_tasks: 'packages_absent_for_version.yml'
   loop_control:
     loop_var: 'php__version_absent'
-  when: php__reset | bool
+  when: '(php__reset | bool and not php__multiversion | d(False))'
   with_items: '{{ php__version_preference | difference(["php" + php__version | d("")]) | list }}'
 
 - name: 'Create directory for php*-fpm logs'
@@ -152,7 +152,7 @@
                            + php__group_pools
                            + php__host_pools
                            + php__dependent_pools) }}'
-  when: '"fpm" in php__server_api_packages and item.state | d("present") != "absent"'
+  when: '("fpm" in php__server_api_packages and item.state | d("present") != "absent") and not php__multiversion|d(False)'
   notify: [ 'Restart php-fpm' ]
   tags: [ 'role::php:pools', 'role::php:config' ]
 
@@ -165,11 +165,22 @@
                            + php__group_pools
                            + php__host_pools
                            + php__dependent_pools) }}'
-  when: '"fpm" in php__server_api_packages and item.state | d() and item.state == "absent"'
+  when: '("fpm" in php__server_api_packages and item.state | d() and item.state == "absent") and not php__multiversion|d(False)'
   notify: [ 'Restart php-fpm' ]
   tags: [ 'role::php:pools', 'role::php:config' ]
 
                                                                    # ]]]
+# PHP-FPM multiversion management [[[
+
+- name: Build php pools for all versions
+  ansible.builtin.include_tasks: 'multiversion.yml'
+  loop_control:
+    loop_var: 'php__version'
+  when: '("fpm" in php__server_api_packages and item.state | d("present") != "absent") and php__multiversion|d(False)'
+  with_items: '{{ php__register_all_installed_versions.stdout_lines }}'
+  tags: [ 'role::php:pools', 'role::php:config' ]
+                                                                   # ]]]
+
 # Manage groups and user accounts [[[
 
 - name: Make sure required system groups exist
