@@ -186,6 +186,7 @@ RewriteRule "^{{ item.status_location | d(apache__status_location) }}" "-" [L]
 {% macro get_document_root_directives(item) %}{# [[[ #}
 Options {{ get_yaml_list_for_elem(item.options | d(apache__vhost_options)) | from_yaml | join(" ") }}
 AllowOverride {{ get_yaml_list_for_elem(item.allow_override | d(apache__vhost_allow_override)) | from_yaml | join(" ") }}
+AllowOverrideList {{ get_yaml_list_for_elem(item.allow_override_list|d(apache__vhost_allow_override_list))|from_yaml | join(" ") }}
 
 {{ get_version_wrapped('Require all granted', "2.4", ">=",
 'Order allow,deny
