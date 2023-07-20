@@ -900,6 +900,13 @@ apache__vhost_type: 'default'
 apache__vhost_allow_override: 'None'
 
                                                                    # ]]]
+# .. envvar:: apache__vhost_allow_override_list [[[
+#
+# The default ``AllowOverrideList`` to use for virtual hosts.
+# Refer to the `Apache AllowOverrideList directive documentation`_ for details.
+apache__vhost_allow_override_list: 'None'
+
+                                                                   # ]]]
 # .. envvar:: apache__vhost_options [[[
 #
 # The default ``Options`` to use for virtual hosts.
