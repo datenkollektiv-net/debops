@@ -22,25 +22,43 @@
 - name: Manage system package installation
   ansible.builtin.include_tasks: 'system_package_management.yml'
   tags: [ 'role::owncloud:pkg' ]
+  args:
+    apply:
+      tags: 'role::owncloud:pkg'
 
 - name: Manage tarball installation
   ansible.builtin.include_tasks: 'tarball.yml'
   when: (owncloud__variant in ["nextcloud"])
   tags: [ 'role::owncloud:tarball' ]
+  args:
+    apply:
+      tags: 'role::owncloud:tarball'
 
 - name: Setup ownCloud configuration
   ansible.builtin.include_tasks: 'setup_owncloud.yml'
   tags: [ 'role::owncloud:config' ]
+  args:
+    apply:
+      tags: 'role::owncloud:config'
 
 - name: Configure LDAP integration
   ansible.builtin.include_tasks: 'ldap.yml'
   when: (owncloud__ldap_enabled | bool)
   tags: [ 'role::owncloud:ldap' ]
+  args:
+    apply:
+      tags: 'role::owncloud:ldap'
 
 - name: Manage custom ownCloud theme
   ansible.builtin.include_tasks: 'theme.yml'
   tags: [ 'role::owncloud:theme' ]
+  args:
+    apply:
+      tags: 'role::owncloud:theme'
 
 - name: Copy file to user profiles
   ansible.builtin.include_tasks: 'copy.yml'
   tags: [ 'role::owncloud:copy' ]
+  args:
+    apply:
+      tags: 'role::owncloud:copy'
