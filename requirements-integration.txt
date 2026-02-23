@@ -1,0 +1,29 @@
+# Copyright (C) 2023 Berkhan Berkdemir <berkhan@tekdanisman.com>
+# Copyright (C) 2024 Maciej Delmanowski <drybjed@gmail.com>
+# Copyright (C) 2024 DebOps <https://debops.org/>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# List of Python packages used by GitHub CI pipeline for continuous integration
+
+ansible
+ansible-core
+cffi
+cryptography
+distro
+dnspython
+future
+Jinja2
+MarkupSafe
+netaddr
+packaging
+passlib
+pyasn1
+pyasn1-modules
+pycparser
+pyOpenSSL
+python-dotenv
+python-ldap
+pyxdg
+PyYAML
+resolvelib
+toml

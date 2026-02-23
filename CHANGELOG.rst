@@ -1,6 +1,6 @@
-.. Copyright (C) 2017-2023 Maciej Delmanowski <drybjed@gmail.com>
+.. Copyright (C) 2017-2025 Maciej Delmanowski <drybjed@gmail.com>
 .. Copyright (C) 2018-2022 Robin Schneider <ypid@riseup.net>
-.. Copyright (C) 2017-2023 DebOps <https://debops.org/>
+.. Copyright (C) 2017-2025 DebOps <https://debops.org/>
 .. SPDX-License-Identifier: GPL-3.0-or-later
 
 .. _changelog:
@@ -23,6 +23,493 @@ You can read information about required changes between releases in the
 
 .. _debops stable-3.1: https://github.com/debops/debops/compare/v3.1.0...stable-3.1
 
+Changed
+~~~~~~~
+
+:ref:`debops.postgresql_server` role
+''''''''''''''''''''''''''''''''''''
+
+- The role can now support `pgBadger`__ log analyzer by enabling verbose log
+  output and modifying access to the log files themselves in the
+  :file:`/var/log/postgresql/` directory. This functionality is disabled by
+  default and can be enabled using a role variable.
+
+  .. __: https://pgbadger.darold.net/
+
+- The default log ident string is changed to ``postgresql-<version>-<name>`` to
+  better distinguish different PostgreSQL instances in the system logs.
+
+
+`debops v3.1.6`_ - 2025-10-09
+-----------------------------
+
+.. _debops v3.1.6: https://github.com/debops/debops/compare/v3.1.5...v3.1.6
+
+Added
+~~~~~
+
+:ref:`debops.ipxe` role
+'''''''''''''''''''''''
+
+- Debian 13 (Trixie) has been released, support for its installer has been added
+  to the role. Debian Trixie is now the primary Stable release available in the
+  netboot installation menu.
+
+:ref:`debops.preseed` role
+''''''''''''''''''''''''''
+
+- The role will now generate preseed templates for Debian 13 (Trixie)
+  automated installation.
+
+Changed
+~~~~~~~
+
+Updates of upstream application versions
+''''''''''''''''''''''''''''''''''''''''
+
+- In the :ref:`debops.netbox` role, the NetBox version has been updated to
+  ``v4.4.1``.
+
+- In the :ref:`debops.ipxe` role, the Debian Bookworm installer has been
+  updated to v12.12.
+
+General
+'''''''
+
+- The :command:`debops` script and custom Ansible lookup plugins should now be
+  compatible with Python 3.12+ due to removal of the ``distutils`` Python
+  dependency, replaced by the ``packaging`` Python module.
+
+:ref:`debops.apt` role
+''''''''''''''''''''''
+
+- The Debian 10 (Buster) release has been archived and removed from Debian
+  mirrors. The role will use https://archive.debian.org/debian as the
+  repository URL on Debian Buster hosts.
+
+:ref:`debops.gitlab` role
+'''''''''''''''''''''''''
+
+- Users can now select specific GitLab version to install using the APT
+  preferences, by specifying the package version in the
+  :envvar:`gitlab__preferred_version` variable. By default, the latest version
+  will be installed.
+
+- The :command:`nginx` service inside of the GitLab Omnibus installation will
+  be restarted when X.509 certificates managed by the :ref:`debops.pki` role
+  are reissued, for example via ACME.
+
+:ref:`debops.pki` role
+''''''''''''''''''''''
+
+- The default key type in :command:`certbot` is set to RSA, since currently
+  there's no support for different key types in DebOps PKI infrastructure.
+
+:ref:`debops.reprepro` role
+'''''''''''''''''''''''''''
+
+- The role now configures local APT repositories for Debian 13 (Trixie) and
+  Debian 14 (Forky) by default. Configuration for Debian Buster repositories
+  has been removed. Symlinks for the :file:`stable/`, :file:`oldstable/` and
+  :file:`oldoldstable/` releases will be updated automatically to point to the
+  correct Debian releases.
+
+:ref:`debops.resources` role
+''''''''''''''''''''''''''''
+
+- The :command:`git` repositories will be processed by the role first, since
+  :command:`git` can handle directory creation if needed.
+
+:ref:`debops.yadm` role
+'''''''''''''''''''''''
+
+- The paths to the repositories that are safe to clone by the :command:`git`
+  command, used for dotfiles by the :ref:`debops.system_users` and
+  :ref:`debops.users` roles, will be defined in the :file:`/etc/gitconfig`
+  system-wide configuration file instead of the per-user :file:`~/.gitconfig`
+  configuration files. This avoids the issue of modifying per-user environment
+  from the system-wide level on which DebOps operates and ensires that the
+  cloned dotfiles are not modified. The specific tasks that do this have been
+  moved from the :ref:`debops.system_users` and :ref:`debops.users` role into
+  the :ref:`debops.yadm` role.
+
+Fixed
+~~~~~
+
+:ref:`debops.netbox` role
+'''''''''''''''''''''''''
+
+- Fixed an issue with the Django superuser creation task that failed execution
+  if the ``error`` string was not present in command output; this resulted in
+  an incomplete installation.
+
+:ref:`debops.nullmailer` role
+'''''''''''''''''''''''''''''
+
+- The role will avoid interacting with the LDAP server when LDAP support is
+  disabled while DebOps is used in LDAP environment.
+
+:ref:`debops.pdns` role
+'''''''''''''''''''''''
+
+- The PowerDNS service will be configured to listen on all external IPv4 and
+  IPv6 addresses of a host insteand of listening on "all" IP addresses to
+  ensure that the service is started while the :command:`systemd-resolved`
+  service listens on the loopback interface.
+
+:ref:`debops.pki` role
+''''''''''''''''''''''
+
+- The Let's Encrypt service dropped support for the ``contacts`` option. This
+  requires a new version of the :command:`acme-tiny` command to be installed on
+  client hosts to work properly. Since the ``acme-tiny`` APT package in Debian
+  Bookworm is too old, on this release the role will install
+  :command:`acme-tiny` from source. On existing installations, the
+  ``acme-tiny`` APT package might need to be removed manually.
+
+- The ``acme-tiny`` source repository switched from the ``master`` branch to
+  the ``main`` branch, existing source installations need to remove the local
+  clone of the repository in :file:`/usr/local/src/pki-acme/diafygi/acme-tiny/`
+  so that it can be cloned correctly by Ansible. You should also remove the
+  copy of the :file:`/usr/local/bin/acme-tiny` command to be installed
+  correctly.
+
+:ref:`debops.resolved` role
+'''''''''''''''''''''''''''
+
+- The role will disable synthesis of local hostname by the
+  :command:`systemd-resolved` service (enabled by default in systemd v256) to
+  allow resolution of the host's FQDN queries by upstream DNS server.
+
+Removed
+~~~~~~~
+
+:ref:`debops.ipxe` role
+'''''''''''''''''''''''
+
+- Debian 10 (Buster) has been archived and it's no longer available on Debian
+  mirrors, support for its installer has been removed from the role.
+
+:ref:`debops.python` role
+'''''''''''''''''''''''''
+
+- The ``python3-future`` and ``python-future`` APT packages have been removed
+  from Debian Stable release, and will not be installed by default by the
+  :ref:`debops.python` role.
+
+
+`debops v3.1.5`_ - 2024-10-28
+-----------------------------
+
+.. _debops v3.1.5: https://github.com/debops/debops/compare/v3.1.4...v3.1.5
+
+Added
+~~~~~
+
+:ref:`debops.core` role
+'''''''''''''''''''''''
+
+- A new local fact, ``ansible_local.core.is_64bits``, can be used to determine
+  if the current system supports 32-bit or 64-bit architecture.
+
+:ref:`debops.netbox` role
+'''''''''''''''''''''''''
+
+- Starting with NetBox ``v3.4.9``, anonymized reporting of census data is being
+  enabled by default. DebOps respects this upstream default. You can change it
+  using :envvar:`netbox__config_census_reporting`.
+
+- The role can be used with NetBox deployed in a clustered PostgreSQL setup
+  with primary/standby nodes.
+
+:ref:`debops.nginx` role
+''''''''''''''''''''''''
+
+- Different file templates used in the role can now be overridden by the users
+  with the DebOps template override system and the ``template_src`` lookup
+  plugin.
+
+Changed
+~~~~~~~
+
+Updates of upstream application versions
+''''''''''''''''''''''''''''''''''''''''
+
+- In the :ref:`debops.netbox` role, the NetBox version has been updated to
+  ``v3.7.2``.
+
+:ref:`debops.nginx` role
+''''''''''''''''''''''''
+
+- The custom :command:`systemd` override that ensures that the :command:`nginx`
+  service is started after network is available will be installed only on older
+  Debian/Ubuntu releases; it's now the default since Debian Bookworm.
+
+:ref:`debops.rspamd` role
+'''''''''''''''''''''''''
+
+- Due to the `removal`__ of the ``distutils`` Python module from Python v3.12,
+  custom scripts included in the role which create and update DKIM keys have
+  been updated to use the ``shutil`` module instead.
+
+  .. __: https://docs.python.org/3.11/whatsnew/3.10.html#distutils-deprecated
+
+:ref:`debops.snmpd` role
+''''''''''''''''''''''''
+
+- The :file:`snmpd.service` configuration file provided in the role will ensure
+  that the :command:`snmpd` daemon is restarted on failure. Older versions of
+  :command:`snmpd` can `fail due to rapid changes in network interfaces`__.
+
+  .. __: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1023656
+
+Fixed
+~~~~~
+
+General
+'''''''
+
+- The ``python3-sphinx-rtd-theme`` APT package is included in the
+  :file:`Dockerfile` configuration file to ensure that the Docker image builds
+  correctly. This fixes an error in the CI checks in GitHub Actions.
+
+:ref:`debops.ifupdown` role
+'''''''''''''''''''''''''''
+
+- The :file:`iface@.service` :command:`systemd` unit provided by the role is
+  changed to use ``After==sys-subsystem-net-devices-%i.device`` parameter. This
+  should ensure that the bridge interfaces are correctly started at boot time.
+
+:ref:`debops.nginx` role
+''''''''''''''''''''''''
+
+- Fixed wrong Jinja syntax in "Configure nginx upstreams" task.
+
+:ref:`debops.sysctl` role
+'''''''''''''''''''''''''
+
+- The :file:`50-pid-max.conf` configuration file will be installed only on
+  platforms which support 64-bit architecture.
+
+Removed
+~~~~~~~
+
+:ref:`debops.netbox` role
+'''''''''''''''''''''''''
+
+- The NAPALM integration feature found in NetBox 3.4 and before has been moved
+  to a dedicated plugin. If you want to continue using it, you will have to
+  install the plugin. All role variables about NAPALM except
+  :envvar:`netbox__napalm_ssh_generate` and
+  :envvar:`netbox__napalm_ssh_generate_bits` have been removed.
+
+
+`debops v3.1.4`_ - 2024-10-21
+-----------------------------
+
+.. _debops v3.1.4: https://github.com/debops/debops/compare/v3.1.3...v3.1.4
+
+Added
+~~~~~
+
+:ref:`debops.nginx` role
+''''''''''''''''''''''''
+
+- Different file templates used in the role can now be overridden by the users
+  with the DebOps template override system and the ``template_src`` lookup
+  plugin.
+
+Changed
+~~~~~~~
+
+General
+'''''''
+
+- The DebOps CI pipeline in GitHub Actions is improved and will be executed on
+  pull requests and pushes to test changes before merging them.
+
+- The :command:`debops` script uses a more generalized function to check
+  current UNIX account during execution, which should work in
+  non-interactive/tty contexts like :command:`systemd` services and unattended
+  CI environments.
+
+Fixed
+~~~~~
+
+General
+'''''''
+
+- The :file:`tools/dist-upgrade.yml` playbook will not fail anymore during
+  :file:`/etc/services` database assembly if no upgrade was performed.
+
+:ref:`debops.docker_gen` role
+'''''''''''''''''''''''''''''
+
+- Flattened the list of directories that are created by the ``file`` task. This
+  should fix the issue of Ansible stopping during execution due to nested lists
+  in the ``loop`` keyword.
+
+:ref:`debops.ferm` role
+'''''''''''''''''''''''
+
+- The role will restart the :command:`fail2ban` service instead of reloading
+  it, which will ensure that the custom rules are re-added when the
+  :command:`ferm` service is restarted.
+
+- Fixed an issue with the role failing if the :envvar:`ferm__parsed_rules`
+  variable is not defined correctly. The role will skip rule generation in such
+  case instead of failing with the "AnsibleUndefined" error message.
+
+:ref:`debops.owncloud` role
+'''''''''''''''''''''''''''
+
+- Fixed conditional logic in a task which determines if the "autosetup"
+  operation should be performed during Nextcloud/ownCloud installation.
+
+:ref:`debops.postgresql_server` role
+''''''''''''''''''''''''''''''''''''
+
+- Fixed an issue with the ``vacuum_defer_cleanup_age`` option removal in
+  PostgreSQL 16.x resulting in failed startup of the service. The option will
+  be added only on supported PostgreSQL versions.
+
+Security
+~~~~~~~~
+
+:ref:`debops.icinga` role
+'''''''''''''''''''''''''
+
+- The GPG key of the Icinga upstream APT repository `has been replaced`__ on
+  30th September 2024. The role includes the new key which should be installed
+  on the host on the next run. The old GPG key will not be removed
+  automatically.
+
+  .. __: https://icinga.com/blog/2024/08/26/icinga-package-repository-key-rotation-2024/
+
+
+`debops v3.1.3`_ - 2024-10-07
+-----------------------------
+
+.. _debops v3.1.3: https://github.com/debops/debops/compare/v3.1.2...v3.1.3
+
+Added
+~~~~~
+
+:ref:`debops.resolved` role
+'''''''''''''''''''''''''''
+
+- The role will add a new entry in the :file:`/etc/services` database (using
+  the :ref:`debops.etc_services` role) for the ``5355`` TCP and UDP ports,
+  reserved for the `Link-Local Multicast Name Resolution`__. This should help
+  with identification of unknown TCP/UDP ports of the listening services.
+
+  .. __: https://en.wikipedia.org/wiki/Link-Local_Multicast_Name_Resolution
+
+Changed
+~~~~~~~
+
+:ref:`debops.gitlab_runner` role
+''''''''''''''''''''''''''''''''
+
+- The role is now compatible with GitLab 17.x and newer releases.
+
+- The runner registration method has changed, see the role documentation for
+  details.
+
+Fixed
+~~~~~
+
+General
+'''''''
+
+- The :ref:`debops.system_users` and the :ref:`debops.users` roles will add the
+  dotfiles repository cloned by the ``root`` UNIX account in the
+  :ref:`debops.yadm` role to the list of trusted :command:`git` repositories in
+  the :file:`~/.gitconfig` configuration file of each user account managed by
+  the role. This is needed to allow :command:`git` to clone local repositories
+  not owned by the UNIX account, required by the mitigation of the
+  `CVE-2022-24765`__ security vulnerability.
+
+  .. __: https://github.blog/open-source/git/git-security-vulnerability-announced/#cve-2022-24765
+
+- The :command:`debops` script will not try to download the required Ansible
+  Collections during new project creation if the :command:`ansible-galaxy`
+  command is not available in the user's ``$PATH``.
+
+:ref:`debops.bind` role
+'''''''''''''''''''''''
+
+- Use the ``::1`` IPv6 address instead of the ``127.0.0.1`` IPv4 address for
+  IPv6 DNS-over-HTTP proxy configuration.
+
+- Use the correct path to the :file:`/bin/tar` command in the BIND backup
+  script.
+
+- Use the full name of the ``ansible.utils.ipaddr`` filter in Jinja templates.
+
+
+`debops v3.1.2`_ - 2024-09-23
+-----------------------------
+
+.. _debops v3.1.2: https://github.com/debops/debops/compare/v3.1.1...v3.1.2
+
+Added
+~~~~~
+
+:ref:`debops.dovecot` role
+''''''''''''''''''''''''''
+
+- The role now supports `iterate_filter` for its LDAP configuration, allowing
+  :command:`doveadm` commands to iterate over all users. Note that you might
+  have to adjust the defaults for the :envvar:`dovecot__ldap_user_list_filter`
+  variable if you use the :envvar:`dovecot__ldap_user_filter` variable.
+
+Changed
+~~~~~~~
+
+General
+'''''''
+
+- The :ref:`debops.root_account`, :ref:`debops.system_users` and
+  :ref:`debops.users` roles are now able to handle the symlinked
+  :file:`~/.ssh/authorized_keys` files correctly using optional ``follow``
+  parameter.
+
+Fixed
+~~~~~
+
+General
+'''''''
+
+- The :ref:`debops.dropbear_initramfs` role is now included in the DebOps
+  Collection published on Ansible Galaxy, generated by the
+  :file:`lib/ansible-galaxy/make-collection` script.
+
+:ref:`debops.apache` role
+'''''''''''''''''''''''''
+
+- Fixed an issue with the vhost ``state: "absent"`` parameter not working
+  correctly when the ``enabled: False`` parameter was not set as well.
+
+:ref:`debops.dropbear_initramfs` role
+'''''''''''''''''''''''''''''''''''''
+
+- The role now supports both the old and the new location if the initramfs
+  configuration files.
+
+:ref:`debops.owncloud` role
+'''''''''''''''''''''''''''
+
+- The role will use a password for the PostgreSQL database, which fixes an
+  issue with the :command:`occ` command not being able to install
+  ownCloud/Nextcloud applications correctly.
+
+
+`debops v3.1.1`_ - 2024-09-16
+-----------------------------
+
+.. _debops v3.1.1: https://github.com/debops/debops/compare/v3.1.0...v3.1.1
+
 Added
 ~~~~~
 
@@ -37,11 +524,45 @@ General
   directories. Playbook sets can be used as aliases to call multiple playbooks
   using a custom name. See :ref:`playbook_sets` documentation for more details.
 
+- Users can now enable "read-only Fridays" functionality on a per project
+  basis, to ensure that on Fridays, Ansible playbooks are run only in check
+  mode, with ``--check`` and ``--diff`` arguments automatically added to the
+  :command:`ansible-playbook` command options.
+
+:ref:`debops.apt_install` role
+''''''''''''''''''''''''''''''
+
+- The role will import the :ref:`debops.secret` role during execution to get
+  access to the :file:`secret/` directory. This permits use of stored passwords
+  in Debconf answers configured via the :ref:`debops.apt_install` role.
+
+:ref:`debops.dnsmasq` role
+''''''''''''''''''''''''''
+
+- The role can optionally ignore IP addresses on a network interface and use
+  only specified ones for :command:`dnsmasq` configuration. This can help with
+  Routing Advertisements issues on internal networks. See role documentation
+  for more details.
+
+:ref:`debops.pki` role
+''''''''''''''''''''''
+
+- Add support for defining per-realm UNIX environment variables set during
+  :command:`pki-realm` script execution. These variables can be used to augment
+  runtime environment, for example to define HTTP proxy to use inside internal
+  networks with restricted access to the outside world.
+
 :ref:`debops.rabbitmq_server` role
 ''''''''''''''''''''''''''''''''''
 
 - The role can manage much more RabbitMQ internal structures - exchanges,
   queues, bindings between them, as well as vhost and user limits.
+
+:ref:`debops.reprepro` role
+'''''''''''''''''''''''''''
+
+- The :command:`reprepro` internal repository path can be configured
+  per-instance using the ``basedir`` parameter.
 
 Changed
 ~~~~~~~
@@ -50,25 +571,107 @@ Updates of upstream application versions
 ''''''''''''''''''''''''''''''''''''''''
 
 - In the :ref:`debops.ipxe` role, support for the Debian Bullseye netboot
-  installer has been updated to v11.10; the Debian Bookworm installer has been
-  updated to v12.5.
+  installer has been updated to v11.12; the Debian Bookworm installer has been
+  updated to v12.7.
+
+General
+'''''''
+
+- DebOps now uses `pipx`__ as the preferred installation method. This allows
+  for easier maintenance of the DebOps virtual environment.
+
+  .. __: https://pipx.pypa.io/
 
 :ref:`debops.elasticsearch` role
 ''''''''''''''''''''''''''''''''
 
 - The role now supports new Elasticsearch v8.x password management mechanism.
 
-Fixed
-~~~~~
+:ref:`debops.lxc` role
+''''''''''''''''''''''
+
+- The role supports integration with the :command:`systemd-resolved` DNS
+  resolver. This permits use of the :command:`systemd-networkd` service to
+  manage networking on the LXC host.
+
+- LXC containers will be configured with AppArmor "unconfined" profile by
+  default. This change allows startup of various services inside of the
+  container without errors on Debian Bookwrom hosts.
+
+:ref:`debops.lxd` role
+''''''''''''''''''''''
+
+- The role supports integration with the :command:`systemd-resolved` DNS
+  resolver. This permits use of the :command:`systemd-networkd` service to
+  manage networking on the LXD host.
 
 :ref:`debops.nginx` role
 ''''''''''''''''''''''''
 
-- Fixed issue with ``role::nginx:servers` Ansible tag not working correctly by
-  adding tags to tasks included dynamically.
+- The ``/index.html`` and ``/index.htm`` entries in the default ``try_files``
+  configuration option have been replaced with the ``$uri/index.html`` entry.
+  This change should ensure that any location not present on the server will
+  return error 404 correctly, instead of falling back to the ``/index.html``
+  file if it's present in the root of the website.
+
+:ref:`debops.postgresql_server` role
+''''''''''''''''''''''''''''''''''''
+
+- The :command:`autopostgresqlbackup` script was modified to have separate set
+  of options for the :command:`psql` command and the :command:`pg_dump`
+  command. This permits the use of the ``--format=custom`` option in
+  :command:`pg_dump` command, enabling more efficient database dumps.
+
+- The extension of the backup files created by the
+  :command:`autopostgresqlbackup` script can be configured via a default
+  variable. This change might cause existing installations to change the file
+  extension used during backups.
+
+:ref:`debops.proc_hidepid` role
+'''''''''''''''''''''''''''''''
+
+- The role will check if the host is in the ``debops_service_libvirtd`` Ansible
+  inventory group, or if the :ref:`debops.libvirtd` role was applied on the
+  host and will change the ``hidepid=`` value to ``0`` to avoid issues with
+  Polkit subsystem.
+
+:ref:`debops.rsyslog` role
+''''''''''''''''''''''''''
+
+- The log rotation configuration for logs managed by :command:`rsyslog` now has
+  an upper size limit of 1 GB to trigger the rotation. This should help in
+  cases when these logs are growing rapidly, but the rotation period is too
+  large to avoid filling up disk space.
+
+:ref:`debops.sshd` role
+'''''''''''''''''''''''
+
+- The :file:`/etc/pam.d/sshd` configuration file can be templated using the
+  DebOps override system via the ``template_src`` lookup plugin. This allows
+  users to provide their own template for the generated file.
+
+:ref:`debops.zabbix_agent` role
+'''''''''''''''''''''''''''''''
+
+- The fact script now supports both the old Zabbix Agent, and the new Zabbix
+  Agent 2 configuration files.
 
 Fixed
 ~~~~~
+
+General
+'''''''
+
+- The :ref:`debops.apparmor` role is now included in the DebOps Collection
+  published on Ansible Galaxy, generated by the
+  :command:`lib/ansible-galaxy/make-collection` script.
+
+:ref:`debops.dpkg_cleanup` role
+'''''''''''''''''''''''''''''''
+
+- Various YAML lists used in the package removal script will be sorted at Jinja
+  level to avoid constant reordering of list elements during Ansible execution
+  which makes the role not idempotent.
 
 :ref:`debops.gitlab` role
 '''''''''''''''''''''''''
@@ -76,6 +679,94 @@ Fixed
 - Fixed an issue with the :file:`/etc/gitlab/ssl/` directory changing its mode
   from 0775 set by the role to 0755 set by the :command:`gitlab-ctl
   reconfigure` command, making the role not idempotent.
+
+:ref:`debops.grub` role
+'''''''''''''''''''''''
+
+- Fixed an issue with the :file:`01_users` configuration file generating errors
+  and resulting in an empty user section in the configuration generated by the
+  :command:`update-grub` command.
+
+:ref:`debops.icinga` role
+'''''''''''''''''''''''''
+
+- Fixed a variable name typo in one of the role's handlers.
+
+:ref:`debops.ifupdown` role
+'''''''''''''''''''''''''''
+
+- Fixed an issue with the :file:`ifup-allow-boot.service` :command:`systemd`
+  unit not starting correctly on boot due to issues with the ``$`` character
+  escaping.
+
+:ref:`debops.lxc` role
+''''''''''''''''''''''
+
+- The role will by default disable NFtables integration within the
+  :command:`lxc-net` script, configurable via a default variable. This fixes
+  usage of LXC containers on Debian Bookworm with the :command:`ferm` service
+  used by DebOps.
+
+- The role will use the ``br0`` bridge when :command:`systemd-networkd` service
+  is detected. This worked previously only with the :command:`ifupdown` service.
+
+:ref:`debops.lxd` role
+''''''''''''''''''''''
+
+- Fixed an issue with the default LXD daemon preseed configuration by removing
+  the unsupported ``managed`` parameter. This should allow the LXD daemon to be
+  initialized correctly.
+
+- Fixed an issue with the role trying to copy the source-built libraries when
+  an APT-based installation is used. The role will check if the libraries exist
+  before trying to copy them.
+
+- Fixed an issue on Debian Bookworm where the :command:`lxd-apparmor-load`
+  binary is not present where the APT-based LXD daemon expects it. The role
+  will create a symlink for this binary when needed.
+
+:ref:`debops.networkd` role
+'''''''''''''''''''''''''''
+
+- Do not restart the :command:`systemd-networkd` service if the role detects
+  that the network stack is not managed by it. This should avoid the issue
+  where the role playbook hanged on first run of the role on a host not managed
+  by :command:`systemd-networkd` service.
+
+:ref:`debops.nginx` role
+''''''''''''''''''''''''
+
+- Fixed issue with ``role::nginx:servers`` Ansible tag not working correctly by
+  adding tags to tasks included dynamically.
+
+:ref:`debops.ntp` role
+''''''''''''''''''''''
+
+- Fixed an issue with conditional check for Linux capabilities not being
+  checked reliably to decide if NTP support should be enabled. The role should
+  now correctly detect when Linux capabilities are enforced.
+
+:ref:`debops.pam_access` role
+'''''''''''''''''''''''''''''
+
+- Renamed a variable in the :command:`dpkg-divert` task forgotten during a mass
+  rename.
+
+:ref:`debops.rsyslog` role
+''''''''''''''''''''''''''
+
+- List of log files which should be managed by the :command:`logrotate` service
+  will be sorted to avoid constant reordering during role execution, which
+  fixes role idempotency.
+
+:ref:`debops.swapfile` role
+'''''''''''''''''''''''''''
+
+- Fixed an issue in the :command:`swapon` task conditional logic where the task
+  could not be executed correctly when the swap file was missing.
+
+- Ensure that the swap file is correctly disabled by the :command:`swapoff`
+  command before being removed with the ``absent`` state.
 
 Removed
 ~~~~~~~

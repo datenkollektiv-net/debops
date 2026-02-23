@@ -84,6 +84,16 @@ postgresql_server__group: 'postgres'
 # should point to the FQDN hostname of the server so that other role can
 # correctly delegate Ansible tasks.
 postgresql_server__delegate_to: '{{ inventory_hostname }}'
+
+                                                                   # ]]]
+# .. envvar:: postgresql_server__pgbadger_logs [[[
+#
+# Enable or disable support for storing database logs for ingestion by
+# pgBadger. This option enables verbose logs, changes the output format.
+# Enabling this option will change the log destination to separate log files in
+# :file:`/var/log/postgresql/` directory; it can also cause rapid increase of
+# log file size.
+postgresql_server__pgbadger_logs: False
                                                                    # ]]]
                                                                    # ]]]
 # Network connections, firewall [[[
@@ -159,7 +169,9 @@ postgresql_server__trusted: '{{ ansible_local.core.admin_users | d([]) }}'
 #
 # Where to log system/error messages.
 # Options: ``stderr``, ``csvlog``, ``syslog``, and ``eventlog``.
-postgresql_server__log_destination: 'syslog'
+postgresql_server__log_destination: '{{ "stderr"
+                                        if (postgresql_server__pgbadger_logs | bool)
+                                        else "syslog" }}'
 
                                                                    # ]]]
 # .. envvar:: postgresql_server__locale [[[
@@ -439,7 +451,7 @@ postgresql_server__data_directory: '/var/lib/postgresql'
 # server. You can use this variable to put the log files on a different
 # partition; if it's not specified, the default :file:`/var/log/postgresql/`
 # directory is used.
-postgresql_server__log_directory: ''
+postgresql_server__log_directory: '/var/log/postgresql'
 
                                                                    # ]]]
 # .. envvar:: postgresql_server__clusters [[[
@@ -487,6 +499,19 @@ postgresql_server__auto_backup_dir: '/var/lib/autopostgresqlbackup'
 #
 # Extra options to be passed to the psql command line when running backup.
 postgresql_server__auto_backup_pg_opts: ''
+
+                                                                   # ]]]
+# .. envvar:: postgresql_server__auto_backup_pg_dump_opts [[[
+#
+# Extra options to be passed to the pg_dump command line when running backup.
+postgresql_server__auto_backup_pg_dump_opts: ''
+
+                                                                   # ]]]
+# .. envvar:: postgresql_server__auto_backup_extension [[[
+#
+# Specify the file extension used by the backup files. Normal SQL dumps use
+# 'sql', pg_dump custom format uses 'pgdump'.
+postgresql_server__auto_backup_extension: 'sql'
 
                                                                    # ]]]
 # .. envvar:: postgresql_server__auto_backup_mail [[[

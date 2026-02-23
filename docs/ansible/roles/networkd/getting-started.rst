@@ -11,6 +11,18 @@ Getting started
       :local:
 
 
+On first run, no changes to network stack take effect
+-----------------------------------------------------
+
+The role is designed around the default presence of the ``ifupdown`` Debian
+package, which manages the network interfaces. Due to this, first execution of
+the role will result in the :command:`systemd-networkd` configuration files
+being generated, but the service itself will not be restarted (see below for
+detailed instructions). The service will be restarted on subsequent executions
+of the role. In an environment where the :command:`systemd-networkd` already
+manages the network interfaces, the role should work normally.
+
+
 Replacing ``ifupdown`` scripts with ``systemd-networkd``
 --------------------------------------------------------
 
@@ -34,18 +46,21 @@ Specific steps to take to replace the ``ifupdown`` package with
       [debops_service_networkd]
       hostname
 
-2. Apply the :ref:`debops.networkd` playbook, check if the host has network connection.
+2. Apply the :ref:`debops.networkd` playbook, check if the host has network
+   connection. On first execution of the role, the :command:`systemd-networkd`
+   service will not be restarted to avoid making changes in the network stack.
 
    .. code-block:: console
 
       user@host:~$ debops check service/networkd -l hostname
       user@host:~$ debops run service/networkd -l hostname
 
-3. Login to the host on the local console, purge ``ifupdown`` package and reboot the host.
+3. Login to the host on the local console, purge ``ifupdown`` and
+   ``dhcpcd-base`` APT packages and reboot the host.
 
    .. code-block:: console
 
-      user@host:~$ sudo apt purge ifupdown
+      user@host:~$ sudo apt purge ifupdown dhcpcd-base
       user@host:~$ sudo systemctl reboot
 
 4. Login to the host and check if the new configuration has been set up

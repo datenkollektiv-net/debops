@@ -34,6 +34,19 @@ Other Ansible roles can use it to install a default set of dotfiles using
 or the specified repository is not present, the variable will be empty.
 
 
+Unsafe Repository error handling
+--------------------------------
+
+Due to the `CVE-2022-24765`__ :command:`git` security vulnerability, UNIX
+accounts cannot clone local :command:`git` repositories that are not owned by
+themselves. This causes issues with the :command:`yadm` repositories managed by
+the ``root`` UNIX account via the role. To mitigate that, the role will add
+path to the clone repository in the :file:`/etc/gitconfig` configuration file
+to tell :command:`git` that these specific repositories are safe.
+
+.. __: https://github.blog/open-source/git/git-security-vulnerability-announced/#cve-2022-24765
+
+
 Example inventory
 -----------------
 
