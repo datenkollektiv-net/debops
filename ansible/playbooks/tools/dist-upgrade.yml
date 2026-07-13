@@ -223,6 +223,8 @@
       community.general.mail:  # noqa no-handler
         host: '{{ dist_upgrade_mail_host }}'
         port: '{{ dist_upgrade_mail_port }}'
+        username: '{{ dist_upgrade_mail_username }}'
+        password: '{{ dist_upgrade_mail_password }}'
         secure: '{{ dist_upgrade_mail_secure }}'
         from: '{{ "root@" + ansible_fqdn }}'
         to: '{{ dist_upgrade_mail_to | join(",") }}'
